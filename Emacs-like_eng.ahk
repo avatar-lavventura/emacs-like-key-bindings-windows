@@ -21,9 +21,9 @@ is_pre_spc = 0
 is_target()
 {
   IfWinActive,ahk_class ConsoleWindowClass ; Cygwin
-    Return 1 
+    Return 1
   IfWinActive,ahk_class MEADOW ; Meadow
-    Return 1 
+    Return 1
   IfWinActive,ahk_class cygwin/x X rl-xterm-XTerm-0
     Return 1
   IfWinActive,ahk_class MozillaUIWindowClass ; keysnail on Firefox
@@ -231,7 +231,7 @@ backward_char()
 {
   global
   if is_pre_spc
-    Send +{Left} 
+    Send +{Left}
   Else
     Send {Left}
   Return
@@ -255,7 +255,7 @@ scroll_down()
   Else
     Send {PgDn}
   Return
-} 
+}
 
 CapsLock & f::
   If is_target()
@@ -265,7 +265,7 @@ CapsLock & f::
       forward_char()
   }
   Return
-  
+ 
 CapsLock & c:: Send ^c
 CapsLock & s:: Send ^s
 CapsLock & v:: Send ^v
@@ -274,13 +274,6 @@ CapsLock & x:: Send ^x
 CapsLock & t:: Send ^t
 CapsLock & l:: Send ^l
 CapsLock & w:: Send ^w
- 
-CapsLock & d::
-  If is_target()
-    Send %A_ThisHotkey%
-  Else
-    delete_char()
-  Return
 
 CapsLock & k::
   If is_target()
@@ -329,3 +322,25 @@ CapsLock & Space::
      Send %A_ThisHotkey%
   Else
      Send ^{space}
+
+CapsLock & d::
+  If is_target()
+    Send %A_ThisHotkey%
+  Else
+    Send {Del}
+  Return
+
+CapsLock & h::
+  If is_target()
+    Send %A_ThisHotkey%
+  Else
+    delete_backward_char()
+  Return
+
+CapsLock & m::
+  If is_target()
+    Send %A_ThisHotkey%
+  Else
+    newline()
+  Return
+
