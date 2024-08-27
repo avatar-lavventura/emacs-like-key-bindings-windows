@@ -274,7 +274,6 @@ CapsLock & x:: Send ^x
 CapsLock & t:: Send ^t
 CapsLock & l:: Send ^l
 CapsLock & w:: Send ^w
-CapsLock & y:: Send ^y
 
 CapsLock & k::
   If is_target()
