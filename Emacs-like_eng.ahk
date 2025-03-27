@@ -351,3 +351,131 @@ CapsLock & y::
     yank()
   Return
 
+^m::
+  If is_target()
+    Send %A_ThisHotkey%
+  Else
+    newline()
+  Return
+
+^h::
+  If is_target()
+    Send %A_ThisHotkey%
+  Else
+    delete_backward_char()
+  Return
+
+^a::
+  If is_target()
+    Send %A_ThisHotkey%
+  Else
+    move_beginning_of_line()
+  Return
+
+^e::
+  If is_target()
+    Send %A_ThisHotkey%
+  Else
+    move_end_of_line()
+  Return
+
+^p::
+  If is_target()
+    Send %A_ThisHotkey%
+  Else
+    previous_line()
+  Return
+
+^n::
+  If is_target()
+    Send %A_ThisHotkey%
+  Else
+    next_line()
+  Return
+
+^b::
+  If is_target()
+    Send %A_ThisHotkey%
+  Else
+    backward_char()
+  Return
+
+^k::
+  If is_target()
+    Send %A_ThisHotkey%
+  Else
+    kill_line()
+  Return
+
+^f::
+  If is_target()
+    Send %A_ThisHotkey%
+  Else
+  {
+      forward_char()
+  }
+  Return
+
+select_all()
+{
+  Send, ^a
+  global is_pre_x = 0
+  Return
+}
+
+Alt & a::
+  If is_target()
+    Send %A_ThisHotkey%
+  Else
+  {
+      select_all()
+  }
+  Return
+
+alt_copy()
+{
+  Send, ^c
+  global is_pre_x = 0
+  Return
+}
+
+Alt & c::
+  If is_target()
+    Send %A_ThisHotkey%
+  Else
+  {
+      alt_copy()
+  }
+  Return
+
+alt_paste()
+{
+  Send, ^v
+  global is_pre_x = 0
+  Return
+}
+
+Alt & v::
+  If is_target()
+    Send %A_ThisHotkey%
+  Else
+  {
+      alt_paste()
+  }
+  Return
+
+alt_search()
+{
+  Send, ^f
+  global is_pre_x = 0
+  Return
+}
+
+Alt & f::
+  If is_target()
+    Send %A_ThisHotkey%
+  Else
+  {
+      alt_search()
+  }
+  Return
