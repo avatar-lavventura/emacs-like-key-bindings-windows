@@ -416,6 +416,13 @@ CapsLock & y::
   }
   Return
 
+^d::
+  If is_target()
+    Send %A_ThisHotkey%
+  Else
+    Send {Del}
+  Return
+
 select_all()
 {
   Send, ^a
@@ -478,4 +485,57 @@ Alt & f::
   {
       alt_search()
   }
+  Return
+  
+ alt_x()
+{
+  Send, ^x
+  global is_pre_x = 0
+  Return
+}
+
+Alt & x::
+  If is_target()
+    Send %A_ThisHotkey%
+  Else
+  {
+      alt_x()
+  }
+  Return
+
+^y::
+  If is_target()
+    Send %A_ThisHotkey%
+  Else
+  {
+      alt_paste()
+  }
+  Return
+  
+  ^g::
+  If is_target()
+    Send %A_ThisHotkey%
+  Else
+    quit()
+  Return
+    
+  Alt & w::
+  If is_target()
+    Send %A_ThisHotkey%
+  Else
+    kill_region()
+  Return
+  
+  ^v::
+  If is_target()
+    Send %A_ThisHotkey%
+  Else
+    scroll_down()
+  Return
+  
+  Alt & b::
+  If is_target()
+    Send %A_ThisHotkey%
+  Else
+    scroll_up()
   Return
