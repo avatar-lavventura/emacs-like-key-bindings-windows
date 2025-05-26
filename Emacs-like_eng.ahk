@@ -76,10 +76,17 @@ open_line()
   Return
 }
 
+; Escape (or another key) to cancel selection mode
+Esc::
+{
+    selectionMode := false
+    return
+}
+
 quit()
 {
   Send {ESC}
-  global is_pre_spc = 0
+  global is_pre_spc = 0  
   Return
 }
 
@@ -511,14 +518,7 @@ Alt & x::
       alt_paste()
   }
   Return
-  
-  ^g::
-  If is_target()
-    Send %A_ThisHotkey%
-  Else
-    quit()
-  Return
-    
+      
   Alt & w::
   If is_target()
     Send %A_ThisHotkey%
@@ -539,3 +539,85 @@ Alt & x::
   Else
     scroll_up()
   Return
+  
+^w::
+{
+    Send ^x  ; Sends Ctrl+X to cut the selected text
+    return
+}
+
+^i::  ; Ctrl+Shift+W to copy the word under the cursor
+{
+    ; Save the original clipboard
+    ClipSaved := ClipboardAll
+    Clipboard := ""  ; Clear clipboard
+
+    ; Move to the start of the word and select it
+    Send ^{Left}  ; Move to start of current/previous word
+    Send ^+{Right}  ; Select the word
+
+    ; Copy the selection
+    Send ^c
+    ClipWait, 1  ; Wait up to 1 second for clipboard to update
+    if ErrorLevel
+    {
+        MsgBox Failed to copy word.
+    }
+    else
+    {
+        ; Optional: show tooltip
+        ToolTip Copied: %Clipboard%
+        SetTimer, HideToolTip, -1000
+    }
+
+    ; Restore original clipboard if needed (optional)
+    ; Clipboard := ClipSaved		
+    return
+}
+
+^-::  ; Ctrl + Shift + 8 = *
+{
+    Send ^z  ; Send Ctrl+Z for undo
+    return
+}
+
+; Global flag for selection mode
+selectionMode := false
+
+; Ctrl+Space toggles selection mode ON/OFF
+^Space::
+{
+    selectionMode := !selectionMode
+    if (selectionMode) {
+        ToolTip Selection Mode ON
+    } else {
+        ToolTip Selection Mode OFF
+    }
+    SetTimer, HideToolTip, -1000
+    return
+}
+
+; Ctrl+G exits selection mode and also sends Escape (quit)
+^g::
+{
+    if (selectionMode) {
+        selectionMode := false
+        ToolTip Selection Mode OFF
+        SetTimer, HideToolTip, -1000
+    }
+    Send {Esc}  ; Send Escape to quit/cancel
+    return
+}
+
+; Movement keys while in selection mode
+#If (selectionMode)
+^n::Send +{Down}
+^p::Send +{Up}
+^f::Send +{Right}
+^b::Send +{Left}
+^a::Send +{Home}  
+#If
+
+HideToolTip:
+ToolTip
+return
