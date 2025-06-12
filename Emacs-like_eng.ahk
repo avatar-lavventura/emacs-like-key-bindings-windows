@@ -501,7 +501,7 @@ Alt & f::
   Return
 }
 
-Alt & x::
+LAlt & x::
   If is_target()
     Send %A_ThisHotkey%
   Else
@@ -542,6 +542,11 @@ Alt & x::
   
 ^w::
 {
+    if (selectionMode) {
+        selectionMode := false
+        ToolTip Selection Mode OFF
+        SetTimer, HideToolTip, -1000
+    }
     Send ^x  ; Sends Ctrl+X to cut the selected text
     return
 }
@@ -620,4 +625,12 @@ selectionMode := false
 
 HideToolTip:
 ToolTip
+return
+
+!+h:: ; Alt + Shift + H
+Send ^+{Left}{Backspace}
+return
+
+!h:: ; Alt + Shift + H
+Send ^+{Left}{Backspace}
 return
