@@ -121,6 +121,11 @@ save_buffer() {
     reset_all_status()
 }
 
+save_all_buffers() {
+    Send("^!s")
+    reset_all_status()
+}
+
 kill_window() {
     Send("!{F4}")
     reset_all_status()
@@ -255,6 +260,7 @@ CapsLock & Space:: {
 ^x:: {
     global gIsCtrlXPressed
     gIsCtrlXPressed := true
+    return
 }
 
 ^s:: {
@@ -323,4 +329,20 @@ CapsLock & -:: {
         Send("^z")   ; undo
     }
     reset_pre_keys()
+}
+
+; CapsLock+X → set flag (for save-all sequence)
+CapsLock & x:: {
+    global gIsCtrlXPressed
+    gIsCtrlXPressed := true
+    return
+}
+
+; CapsLock+X → s  =  save-all
+s:: {
+    global gIsCtrlXPressed
+    if gIsCtrlXPressed
+        save_all_buffers()
+    else
+        Send("{Blind}s")
 }
