@@ -313,6 +313,8 @@ Alt & f:: Send("^f")
 LAlt & x:: Send("^x")
 Alt & w:: kill_region()
 Alt & b:: scroll_up()
+Alt & p:: scroll_up()   ; Page Up
+Alt & n:: scroll_down() ; Page Down
 
 ; --------------------------------------------------------
 ; Initialize
