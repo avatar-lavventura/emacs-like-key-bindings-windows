@@ -131,6 +131,24 @@ kill_window() {
     reset_all_status()
 }
 
+beginning_of_buffer() {
+    global gIsMarkDown
+    if gIsMarkDown
+        Send("+^{Home}")
+    else
+        Send("^{Home}")
+    reset_pre_keys()
+}
+
+end_of_buffer() {
+    global gIsMarkDown
+    if gIsMarkDown
+        Send("+^{End}")
+    else
+        Send("^{End}")
+    reset_pre_keys()
+}
+
 kill_buffer() {
     Send("^w")
     reset_all_status()
@@ -229,11 +247,31 @@ CapsLock & k:: kill_line()
 CapsLock & d:: delete_char()
 CapsLock & h:: delete_backward_char()
 CapsLock & m:: newline()
+CapsLock & r:: {
+    if WinActive("ahk_exe WindowsTerminal.exe") or WinActive("ahk_exe powershell.exe") or WinActive("ahk_exe Cursor.exe")
+        Send("^r")
+    else
+        isearch_backward()
+}
+CapsLock & s:: {
+    global gIsCtrlXPressed
+    if WinActive("ahk_exe WindowsTerminal.exe") or WinActive("ahk_exe powershell.exe") or WinActive("ahk_exe Cursor.exe")
+        Send("^s")
+    else if gIsCtrlXPressed
+        save_buffer()
+    else
+        isearch_forward()
+}
 CapsLock & w:: kill_ring_save()
 CapsLock & y:: yank()
+CapsLock & l:: Send("^l")
 CapsLock & g:: {
     global gRedoMode
-    gRedoMode := !gRedoMode
+    if WinActive("ahk_exe WindowsTerminal.exe") or WinActive("ahk_exe powershell.exe") or WinActive("ahk_exe Cursor.exe")
+        Send("^g")
+    else {
+        gRedoMode := !gRedoMode
+    }
 }
 CapsLock & Space:: {
     global gIsMarkDown
@@ -265,13 +303,22 @@ CapsLock & Space:: {
 
 ^s:: {
     global gIsCtrlXPressed
+    if WinActive("ahk_exe WindowsTerminal.exe") or WinActive("ahk_exe powershell.exe") or WinActive("ahk_exe Cursor.exe") {
+        Send("{Blind}^s")
+        return
+    }
     if gIsCtrlXPressed
         save_buffer()
     else
         isearch_forward()
 }
 
-^r:: isearch_backward()
+^r:: {
+    if WinActive("ahk_exe WindowsTerminal.exe") or WinActive("ahk_exe powershell.exe") or WinActive("ahk_exe Cursor.exe")
+        Send("^r")
+    else
+        isearch_backward()
+}
 
 ^Space:: {
     global gIsMarkDown
@@ -280,8 +327,12 @@ CapsLock & Space:: {
 
 ^g:: {
     global gIsMarkDown
-    gIsMarkDown := false
-    Send("{Esc}")
+    if WinActive("ahk_exe WindowsTerminal.exe") or WinActive("ahk_exe powershell.exe") or WinActive("ahk_exe Cursor.exe")
+        Send("^g")
+    else {
+        gIsMarkDown := false
+        Send("{Esc}")
+    }
 }
 
 ^w:: kill_region()
@@ -343,8 +394,27 @@ CapsLock & x:: {
 ; CapsLock+X → s  =  save-all
 s:: {
     global gIsCtrlXPressed
-    if gIsCtrlXPressed
+    if gIsCtrlXPressed {
+        gIsCtrlXPressed := false
         save_all_buffers()
-    else
+    } else
         Send("{Blind}s")
+}
+
+; C-x < → beginning of buffer
+,:: {
+    global gIsCtrlXPressed
+    if gIsCtrlXPressed
+        beginning_of_buffer()
+    else
+        Send("{Blind},")
+}
+
+; C-x . → end of buffer
+.:: {
+    global gIsCtrlXPressed
+    if gIsCtrlXPressed
+        end_of_buffer()
+    else
+        Send("{Blind}.")
 }
