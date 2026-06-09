@@ -32,6 +32,28 @@ reset_all_status() {
     gIsSearching := false
 }
 
+IsTerminal() {
+    try {
+        winExe := WinGetProcessName("A")
+        return (winExe = "WindowsTerminal.exe") or (winExe = "powershell.exe") or (winExe = "pwsh.exe")
+    } catch {
+        return false
+    }
+}
+
+IsEmacsTerminal() {
+    ; Use active window title - Windows Terminal sets it to the focused tab's title
+    try {
+        winExe := WinGetProcessName("A")
+        if not ((winExe = "WindowsTerminal.exe") or (winExe = "powershell.exe"))
+            return false
+        winTitle := WinGetTitle("A")
+        return InStr(winTitle, "emacs", false)
+    } catch {
+        return false
+    }
+}
+
 delete_char() {
     Send("{Del}")
     reset_all_status()
@@ -43,14 +65,12 @@ delete_backward_char() {
 }
 
 kill_line() {
-    Send("{Shift Down}{End}{Shift Up}")
-    Sleep 50
-    Send("^x")
+    Send("+{End}{BS}")
     reset_all_status()
 }
 
-open_line() {
-    Send("{End}{Enter}{Up}")
+kill_line_backward() {
+    Send("+{Home}{BS}")
     reset_all_status()
 }
 
@@ -61,11 +81,6 @@ newline() {
 
 indent_for_tab_command() {
     Send("{Tab}")
-    reset_all_status()
-}
-
-newline_and_indent() {
-    Send("{Enter}{Tab}")
     reset_all_status()
 }
 
@@ -126,11 +141,6 @@ save_all_buffers() {
     reset_all_status()
 }
 
-kill_window() {
-    Send("!{F4}")
-    reset_all_status()
-}
-
 beginning_of_buffer() {
     global gIsMarkDown
     if gIsMarkDown
@@ -147,11 +157,6 @@ end_of_buffer() {
     else
         Send("^{End}")
     reset_pre_keys()
-}
-
-kill_buffer() {
-    Send("^w")
-    reset_all_status()
 }
 
 move_beginning_of_line() {
@@ -226,9 +231,39 @@ scroll_down() {
     reset_pre_keys()
 }
 
-HideToolTip() {
-    ToolTip()
-}
+; --------------------------------------------------------
+; CapsLock = Ctrl passthrough for terminal (catch-all)
+; Only active when Emacs is running inside the terminal
+; --------------------------------------------------------
+#HotIf IsEmacsTerminal()
+CapsLock & a:: Send("{Blind}^a")
+CapsLock & b:: Send("{Blind}^b")
+CapsLock & c:: Send("{Blind}^c")
+CapsLock & d:: Send("{Blind}^d")
+CapsLock & e:: Send("{Blind}^e")
+CapsLock & f:: Send("{Blind}^f")
+CapsLock & g:: Send("{Blind}^g")
+CapsLock & h:: Send("{Blind}^h")
+CapsLock & i:: Send("{Blind}^i")
+CapsLock & j:: Send("{Blind}^j")
+CapsLock & k:: Send("{Blind}^k")
+CapsLock & l:: Send("{Blind}^l")
+CapsLock & m:: Send("{Blind}^m")
+CapsLock & n:: Send("{Blind}^n")
+CapsLock & o:: Send("{Blind}^o")
+CapsLock & p:: Send("{Blind}^p")
+CapsLock & q:: Send("{Blind}^q")
+CapsLock & r:: Send("{Blind}^r")
+CapsLock & s:: Send("{Blind}^s")
+CapsLock & t:: Send("{Blind}^t")
+CapsLock & u:: Send("{Blind}^u")
+CapsLock & v:: Send("{Blind}^v")
+CapsLock & w:: Send("{Blind}^w")
+CapsLock & x:: Send("{Blind}^x")
+CapsLock & y:: Send("{Blind}^y")
+CapsLock & z:: Send("{Blind}^z")
+CapsLock & Space:: Send("{Blind}^Space")
+#HotIf
 
 ; --------------------------------------------------------
 ; Hotkeys
@@ -244,19 +279,26 @@ CapsLock & n:: next_line()
 CapsLock & a:: move_beginning_of_line()
 CapsLock & e:: move_end_of_line()
 CapsLock & k:: kill_line()
+CapsLock & u:: kill_line_backward()
 CapsLock & d:: delete_char()
 CapsLock & h:: delete_backward_char()
 CapsLock & m:: newline()
+CapsLock & c:: {
+    if IsTerminal()
+        Send("{Blind}^c")
+    else
+        kill_region()
+}
 CapsLock & r:: {
-    if WinActive("ahk_exe WindowsTerminal.exe") or WinActive("ahk_exe powershell.exe") or WinActive("ahk_exe Cursor.exe")
-        Send("^r")
+    if IsTerminal()
+        Send("{Blind}^r")
     else
         isearch_backward()
 }
 CapsLock & s:: {
     global gIsCtrlXPressed
-    if WinActive("ahk_exe WindowsTerminal.exe") or WinActive("ahk_exe powershell.exe") or WinActive("ahk_exe Cursor.exe")
-        Send("^s")
+    if IsTerminal()
+        Send("{Blind}^s")
     else if gIsCtrlXPressed
         save_buffer()
     else
@@ -267,11 +309,7 @@ CapsLock & y:: yank()
 CapsLock & l:: Send("^l")
 CapsLock & g:: {
     global gRedoMode
-    if WinActive("ahk_exe WindowsTerminal.exe") or WinActive("ahk_exe powershell.exe") or WinActive("ahk_exe Cursor.exe")
-        Send("^g")
-    else {
-        gRedoMode := !gRedoMode
-    }
+    gRedoMode := !gRedoMode
 }
 CapsLock & Space:: {
     global gIsMarkDown
@@ -279,31 +317,103 @@ CapsLock & Space:: {
 }
 
 ; -----------------------
-; Ctrl-based keys
+; Ctrl-based keys (pass through in terminal, emacs bindings elsewhere)
 ; -----------------------
-^f:: forward_char()
-^b:: backward_char()
-^p:: previous_line()
-^n:: next_line()
-^a:: move_beginning_of_line()
-^e:: move_end_of_line()
-^k:: kill_line()
-^d:: delete_char()
-^h:: delete_backward_char()
-^m:: newline()
-^i:: indent_for_tab_command()
-^y:: yank()
-^z:: undo()
-
+^f:: {
+    if IsTerminal()
+        Send("{Blind}^f")
+    else
+        forward_char()
+}
+^b:: {
+    if IsTerminal()
+        Send("{Blind}^b")
+    else
+        backward_char()
+}
+^p:: {
+    if IsTerminal()
+        Send("{Blind}^p")
+    else
+        previous_line()
+}
+^n:: {
+    if IsTerminal()
+        Send("{Blind}^n")
+    else
+        next_line()
+}
+^a:: {
+    if IsTerminal()
+        Send("{Blind}^a")
+    else
+        move_beginning_of_line()
+}
+^e:: {
+    if IsTerminal()
+        Send("{Blind}^e")
+    else
+        move_end_of_line()
+}
+^k:: {
+    if IsTerminal()
+        Send("{Blind}^k")
+    else
+        kill_line()
+}
+^u:: {
+    if IsTerminal()
+        Send("{Blind}^u")
+    else
+        kill_line_backward()
+}
+^d:: {
+    if IsTerminal()
+        Send("{Blind}^d")
+    else
+        delete_char()
+}
+^h:: {
+    if IsTerminal()
+        Send("{Blind}^h")
+    else
+        delete_backward_char()
+}
+^m:: {
+    if IsTerminal()
+        Send("{Blind}^m")
+    else
+        newline()
+}
+^i:: {
+    if IsTerminal()
+        Send("{Blind}^i")
+    else
+        indent_for_tab_command()
+}
+^y:: {
+    if IsTerminal()
+        Send("{Blind}^y")
+    else
+        yank()
+}
+^z:: {
+    if IsTerminal()
+        Send("{Blind}^z")
+    else
+        undo()
+}
 ^x:: {
     global gIsCtrlXPressed
+    if IsTerminal() {
+        Send("{Blind}^x")
+        return
+    }
     gIsCtrlXPressed := true
-    return
 }
-
 ^s:: {
     global gIsCtrlXPressed
-    if WinActive("ahk_exe WindowsTerminal.exe") or WinActive("ahk_exe powershell.exe") or WinActive("ahk_exe Cursor.exe") {
+    if IsTerminal() {
         Send("{Blind}^s")
         return
     }
@@ -312,40 +422,53 @@ CapsLock & Space:: {
     else
         isearch_forward()
 }
-
 ^r:: {
-    if WinActive("ahk_exe WindowsTerminal.exe") or WinActive("ahk_exe powershell.exe") or WinActive("ahk_exe Cursor.exe")
-        Send("^r")
+    if IsTerminal()
+        Send("{Blind}^r")
     else
         isearch_backward()
 }
-
 ^Space:: {
     global gIsMarkDown
     gIsMarkDown := !gIsMarkDown
 }
-
 ^g:: {
-    global gIsMarkDown
-    if WinActive("ahk_exe WindowsTerminal.exe") or WinActive("ahk_exe powershell.exe") or WinActive("ahk_exe Cursor.exe")
-        Send("^g")
+    global gIsMarkDown, gRedoMode
+    if IsTerminal()
+        Send("{Blind}^g")
     else {
         gIsMarkDown := false
-        Send("{Esc}")
+        gRedoMode := !gRedoMode
     }
 }
-
-^w:: kill_region()
-!w:: kill_ring_save()
-^o:: find_file()
-!v:: scroll_up()
-^v:: scroll_down()
+^w:: {
+    if IsTerminal()
+        Send("{Blind}^w")
+    else
+        kill_region()
+}
+^o:: {
+    if IsTerminal()
+        Send("{Blind}^o")
+    else
+        find_file()
+}
+^v:: {
+    if IsTerminal()
+        Send("{Blind}^v")
+    else
+        scroll_down()
+}
 
 ; -----------------------
 ; Escape key
 ; -----------------------
 Esc:: {
     global gIsEscapePressed
+    if IsTerminal() {
+        Send("{Blind}{Esc}")
+        return
+    }
     if gIsEscapePressed {
         Send "{Esc}"
         gIsEscapePressed := false
@@ -356,42 +479,88 @@ Esc:: {
 
 ; -----------------------
 ; Alt-based keys
+; Outside Emacs terminal: Alt acts as Ctrl
+; Inside Emacs terminal: Alt passes through as real Alt
 ; -----------------------
-Alt & a:: Send("^a") ; select all
+#HotIf !IsEmacsTerminal()
+Alt & a:: Send("^a")
+Alt & b:: Send("^b")
 Alt & c:: Send("^c")
-Alt & v:: Send("^v")
+Alt & d:: Send("^d")
+Alt & e:: Send("^e")
 Alt & f:: Send("^f")
-LAlt & x:: Send("^x")
-Alt & w:: kill_region()
-Alt & b:: scroll_up()
-Alt & p:: scroll_up()   ; Page Up
-Alt & n:: scroll_down() ; Page Down
+Alt & g:: Send("^g")
+Alt & h:: Send("^h")
+Alt & i:: Send("^i")
+Alt & j:: Send("^j")
+Alt & k:: Send("^k")
+Alt & l:: Send("^l")
+Alt & m:: Send("^m")
+Alt & n:: Send("^n")
+Alt & o:: Send("^o")
+Alt & p:: Send("^p")
+Alt & q:: Send("^q")
+Alt & r:: Send("^r")
+Alt & s:: Send("^s")
+Alt & t:: Send("^t")
+Alt & u:: Send("^u")
+Alt & v:: Send("^v")
+Alt & w:: Send("^w")
+Alt & x:: Send("^x")
+Alt & y:: Send("^y")
+Alt & z:: Send("^z")
+Alt & 1:: Send("^1")
+Alt & 2:: Send("^2")
+Alt & 3:: Send("^3")
+Alt & 4:: Send("^4")
+Alt & 5:: Send("^5")
+Alt & 6:: Send("^6")
+Alt & 7:: Send("^7")
+Alt & 8:: Send("^8")
+Alt & 9:: Send("^9")
+Alt & 0:: Send("^0")
+Alt & Tab:: Send("^{Tab}")
+Alt & Enter:: Send("^{Enter}")
+Alt & Space:: Send("^{Space}")
+Alt & Left:: Send("^{Left}")
+Alt & Right:: Send("^{Right}")
+Alt & Up:: Send("^{Up}")
+Alt & Down:: Send("^{Down}")
+Alt & Home:: Send("^{Home}")
+Alt & End:: Send("^{End}")
+Alt & PgUp:: Send("^{PgUp}")
+Alt & PgDn:: Send("^{PgDn}")
+Alt & BS:: Send("^{BS}")
+Alt & Del:: Send("^{Del}")
+#HotIf
 
 ; --------------------------------------------------------
 ; Initialize
 ; --------------------------------------------------------
 SetCapsLockState("AlwaysOff")
 
-; CapsLock + - → undo veya redo
+; CapsLock + - => undo or redo
 CapsLock & -:: {
     global gRedoMode
-    if (gRedoMode) {
-        Send("^y")   ; redo (Ctrl+Y is standard redo)
-        gRedoMode := false
-    } else {
-        Send("^z")   ; undo
-    }
+    if (gRedoMode)
+        Send("^y")
+    else
+        Send("^z")
     reset_pre_keys()
 }
 
-; CapsLock+X → set flag (for save-all sequence)
+; CapsLock+X => set flag (or pass through in terminal)
 CapsLock & x:: {
     global gIsCtrlXPressed
+    if IsTerminal() {
+        Send("{Blind}^x")
+        return
+    }
     gIsCtrlXPressed := true
     return
 }
 
-; CapsLock+X → s  =  save-all
+; CapsLock+X then s => save-all
 s:: {
     global gIsCtrlXPressed
     if gIsCtrlXPressed {
@@ -401,7 +570,7 @@ s:: {
         Send("{Blind}s")
 }
 
-; C-x < → beginning of buffer
+; C-x , => beginning of buffer
 ,:: {
     global gIsCtrlXPressed
     if gIsCtrlXPressed
@@ -410,7 +579,7 @@ s:: {
         Send("{Blind},")
 }
 
-; C-x . → end of buffer
+; C-x . => end of buffer
 .:: {
     global gIsCtrlXPressed
     if gIsCtrlXPressed
@@ -418,3 +587,14 @@ s:: {
     else
         Send("{Blind}.")
 }
+
+SC056::Send("``")
++SC056::Send("~")
+
+#HotIf WinActive("ahk_exe chrome.exe")
+^w::return        ; block Ctrl+W (close tab)
+^t::return        ; block Ctrl+T (new tab)
+^r::return        ; block Ctrl+R (refresh)
+^l::return        ; block Ctrl+L (address bar)
+CapsLock & -::return        ; block Ctrl+L (address bar)
+#HotIf
