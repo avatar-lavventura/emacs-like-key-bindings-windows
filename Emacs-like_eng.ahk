@@ -6,6 +6,7 @@
 
 SetCapsLockState("AlwaysOff")
 #UseHook
+SendMode("Event")
 
 ; --------------------------------------------------------
 ; Global flags
@@ -23,6 +24,19 @@ reset_pre_keys() {
     global gIsCtrlXPressed, gIsEscapePressed
     gIsCtrlXPressed := false
     gIsEscapePressed := false
+}
+
+clear_ctrl_x_pending() {
+    global gIsCtrlXPressed
+    gIsCtrlXPressed := false
+}
+
+set_ctrl_x_pending() {
+    global gIsCtrlXPressed
+    gIsCtrlXPressed := true
+    ; Auto-clear after 2s so a missed follow-up key (s / , / .) doesn't
+    ; leave the flag stuck true and swallow the next normal keystroke.
+    SetTimer(clear_ctrl_x_pending, -2000)
 }
 
 reset_all_status() {
@@ -296,13 +310,10 @@ CapsLock & r:: {
         isearch_backward()
 }
 CapsLock & s:: {
-    global gIsCtrlXPressed
     if IsTerminal()
         Send("{Blind}^s")
-    else if gIsCtrlXPressed
-        save_buffer()
     else
-        isearch_forward()
+        save_buffer()
 }
 CapsLock & w:: kill_ring_save()
 CapsLock & y:: yank()
@@ -404,12 +415,11 @@ CapsLock & Space:: {
         undo()
 }
 ^x:: {
-    global gIsCtrlXPressed
     if IsTerminal() {
         Send("{Blind}^x")
         return
     }
-    gIsCtrlXPressed := true
+    set_ctrl_x_pending()
 }
 ^s:: {
     global gIsCtrlXPressed
@@ -551,12 +561,11 @@ CapsLock & -:: {
 
 ; CapsLock+X => set flag (or pass through in terminal)
 CapsLock & x:: {
-    global gIsCtrlXPressed
     if IsTerminal() {
         Send("{Blind}^x")
         return
     }
-    gIsCtrlXPressed := true
+    set_ctrl_x_pending()
     return
 }
 
