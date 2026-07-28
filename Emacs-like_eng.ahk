@@ -49,7 +49,7 @@ reset_all_status() {
 IsTerminal() {
     try {
         winExe := WinGetProcessName("A")
-        return (winExe = "WindowsTerminal.exe") or (winExe = "powershell.exe") or (winExe = "pwsh.exe")
+        return (winExe = "WindowsTerminal.exe") or (winExe = "powershell.exe") or (winExe = "pwsh.exe") or (winExe = "conhost.exe")
     } catch {
         return false
     }
@@ -127,6 +127,11 @@ kill_region() {
 
 kill_ring_save() {
     Send("^c")
+    reset_all_status()
+}
+
+cut() {
+    Send("^x")
     reset_all_status()
 }
 
@@ -292,7 +297,14 @@ CapsLock & p:: previous_line()
 CapsLock & n:: next_line()
 CapsLock & a:: move_beginning_of_line()
 CapsLock & e:: move_end_of_line()
-CapsLock & k:: kill_line()
+CapsLock & k:: {
+    if IsTerminal() {
+        Send("{Blind}{Ctrl up}")
+        Send("+{End}")
+        Send("^x")
+    } else
+        kill_line()
+}
 CapsLock & u:: kill_line_backward()
 CapsLock & d:: delete_char()
 CapsLock & h:: delete_backward_char()
@@ -315,7 +327,7 @@ CapsLock & s:: {
     else
         save_buffer()
 }
-CapsLock & w:: kill_ring_save()
+CapsLock & w:: cut()
 CapsLock & y:: yank()
 CapsLock & l:: Send("^l")
 CapsLock & g:: {
@@ -367,9 +379,11 @@ CapsLock & Space:: {
         move_end_of_line()
 }
 ^k:: {
-    if IsTerminal()
-        Send("{Blind}^k")
-    else
+    if IsTerminal() {
+        Send("{Blind}{Ctrl up}")
+        Send("+{End}")
+        Send("^x")
+    } else
         kill_line()
 }
 ^u:: {
@@ -404,7 +418,7 @@ CapsLock & Space:: {
 }
 ^y:: {
     if IsTerminal()
-        Send("{Blind}^y")
+        Send("{Blind}^v")
     else
         yank()
 }
@@ -495,7 +509,13 @@ Esc:: {
 #HotIf !IsEmacsTerminal()
 Alt & a:: Send("^a")
 Alt & b:: Send("^b")
-Alt & c:: Send("^c")
+Alt & c:: {
+    if WinActive("ahk_exe notepad.exe") {
+        Send("{LAlt Up}")
+        Send("^c")
+    } else
+        Send("^c")
+}
 Alt & d:: Send("^d")
 Alt & e:: Send("^e")
 Alt & f:: Send("^f")
@@ -514,7 +534,13 @@ Alt & r:: Send("^r")
 Alt & s:: Send("^s")
 Alt & t:: Send("^t")
 Alt & u:: Send("^u")
-Alt & v:: Send("^v")
+Alt & v:: {
+    if WinActive("ahk_exe notepad.exe") {
+        Send("{LAlt Up}")
+        Send("^v")
+    } else
+        Send("^v")
+}
 Alt & w:: Send("^w")
 Alt & x:: Send("^x")
 Alt & y:: Send("^y")
@@ -543,6 +569,64 @@ Alt & PgDn:: Send("^{PgDn}")
 Alt & BS:: Send("^{BS}")
 Alt & Del:: Send("^{Del}")
 #HotIf
+
+; --------------------------------------------------------
+; Win key acts as real Alt (does not touch the physical Alt
+; key above, which stays remapped to Ctrl). Implemented as
+; combo hotkeys, not a raw LWin::Alt remap, so it can't
+; collide with the Alt & x rules above.
+; --------------------------------------------------------
+*LWin::return  ; suppress Start Menu on a bare tap
+*RWin::return
+LWin & a:: Send("!a")
+LWin & b:: Send("!b")
+LWin & c:: Send("!c")
+LWin & d:: Send("!d")
+LWin & e:: Send("!e")
+LWin & f:: Send("!f")
+LWin & g:: Send("!g")
+LWin & h:: Send("!h")
+LWin & i:: Send("!i")
+LWin & j:: Send("!j")
+LWin & k:: Send("!k")
+LWin & l:: Send("!l")
+LWin & m:: Send("!m")
+LWin & n:: Send("!n")
+LWin & o:: Send("!o")
+LWin & p:: Send("!p")
+LWin & q:: Send("!q")
+LWin & r:: Send("!r")
+LWin & s:: Send("!s")
+LWin & t:: Send("!t")
+LWin & u:: Send("!u")
+LWin & v:: Send("!v")
+LWin & w:: Send("!w")
+LWin & x:: Send("!x")
+LWin & y:: Send("!y")
+LWin & z:: Send("!z")
+LWin & 1:: Send("!1")
+LWin & 2:: Send("!2")
+LWin & 3:: Send("!3")
+LWin & 4:: Send("!4")
+LWin & 5:: Send("!5")
+LWin & 6:: Send("!6")
+LWin & 7:: Send("!7")
+LWin & 8:: Send("!8")
+LWin & 9:: Send("!9")
+LWin & 0:: Send("!0")
+LWin & Tab:: Send("!{Tab}")
+LWin & Enter:: Send("!{Enter}")
+LWin & Space:: Send("!{Space}")
+LWin & Left:: Send("!{Left}")
+LWin & Right:: Send("!{Right}")
+LWin & Up:: Send("!{Up}")
+LWin & Down:: Send("!{Down}")
+LWin & Home:: Send("!{Home}")
+LWin & End:: Send("!{End}")
+LWin & PgUp:: Send("!{PgUp}")
+LWin & PgDn:: Send("!{PgDn}")
+LWin & BS:: Send("!{BS}")
+LWin & Del:: Send("!{Del}")
 
 ; --------------------------------------------------------
 ; Initialize
