@@ -292,11 +292,40 @@ CapsLock & Space:: Send("{Blind}^Space")
 ; CapsLock-based keys
 ; -----------------------
 CapsLock & f:: forward_char()
-CapsLock & b:: backward_char()
 CapsLock & p:: previous_line()
 CapsLock & n:: next_line()
-CapsLock & a:: move_beginning_of_line()
-CapsLock & e:: move_end_of_line()
+
+CapsLock & b:: {                      
+    if WinActive("ahk_exe msedge.exe")
+        Send("{Blind}^b")         
+    else                              
+        backward_char()   
+}                                     
+
+CapsLock & r:: {                      
+    if WinActive("ahk_exe msedge.exe")
+        Send("{Blind}^r")    
+    else
+	if IsTerminal()
+            send("{Blind}^r")
+	else
+            isearch_backward()     
+}   
+
+CapsLock & a:: {                      
+    if WinActive("ahk_exe msedge.exe")
+        Send("{Blind}^a")         
+    else                              
+        move_beginning_of_line()      
+}                                     
+
+CapsLock & e:: {                      
+    if WinActive("ahk_exe msedge.exe")
+        Send("{Blind}^e")         
+    else                              
+        move_end_of_line()      
+}  
+
 CapsLock & k:: {
     if IsTerminal() {
         Send("{Blind}{Ctrl up}")
@@ -315,12 +344,7 @@ CapsLock & c:: {
     else
         kill_region()
 }
-CapsLock & r:: {
-    if IsTerminal()
-        Send("{Blind}^r")
-    else
-        isearch_backward()
-}
+
 CapsLock & s:: {
     if IsTerminal()
         Send("{Blind}^s")
@@ -644,14 +668,18 @@ CapsLock & -:: {
 }
 
 ; CapsLock+X => set flag (or pass through in terminal)
-CapsLock & x:: {
-    if IsTerminal() {
-        Send("{Blind}^x")
-        return
-    }
-    set_ctrl_x_pending()
-    return
-}
+CapsLock & x:: {                      
+    if WinActive("ahk_exe msedge.exe")
+        Send("{Blind}^x")         
+    else                              
+    	if IsTerminal() {
+            Send("{Blind}^x")
+            return
+        }
+        set_ctrl_x_pending()
+        return      
+}  
+
 
 ; CapsLock+X then s => save-all
 s:: {
